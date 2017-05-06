@@ -21,34 +21,47 @@ YELLOW = (255, 255, 0)
 # initialize pygame and create window
 pygame.init()
 pygame.mixer.init() # deals with sound
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT)) # sets the creen
 pygame.display.set_caption("Shooter")
 clock = pygame.time.Clock()
+
+# display any text to screen
+def displayMsg(msg,font,size,color,x,y):
+    myfont = pygame.font.SysFont(font,size,True) # gets font/font size/ bold
+    label = myfont.render(msg,1,color); # makes a label with a msg and color with it
+    screen.blit(label,(x,y)) # stages label to screen at x and y cordinate
 
 # player ship class
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        # sets the player image to specefic size
+
+        # sets the player image to specefic size // load image
         self.image = pygame.transform.scale(player_img, (50,38))
-        # gets rid of Black outline
-        self.image.set_colorkey(BLACK)
+        self.image.set_colorkey(BLACK) # gets rid of Black outline
         self.rect = self.image.get_rect()
+
+        # hit circle of the player ship
         self.radius = 20
+
+
         self.rect.centerx = WIDTH/2 # x cordinate of sprite
         self.rect.bottom = HEIGHT - 10 # y cordinate of sprite
-        self.speedx = 0
+        self.speedx = 0 # player does not move til gets command
 
     def update(self):
-
         self.speedx = 0
         keystate = pygame.key.get_pressed() # every key that is pushed down
+
         # deals with key movement
         if keystate[pygame.K_LEFT]:
             self.speedx = -8
         if keystate[pygame.K_RIGHT]:
             self.speedx = 8
+
+        # moves the player along the x cordinate
         self.rect.x += self.speedx
+
         #create walls for player
         if self.rect.right > WIDTH:
             self.rect.right = WIDTH
@@ -56,7 +69,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.left = 0
 
     def shoot(self):
-        # starting point is top of player sprite
+        # creates shot sprite starting point is top of player sprite
         shot = Shot(self.rect.centerx, self.rect.top)
         all_sprites.add(shot) # add shot sprite to all sprites
         shots.add(shot) # add shot to shots gropup
@@ -66,20 +79,55 @@ class Player(pygame.sprite.Sprite):
 class Mob(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = asteroid_img
-        self.image.set_colorkey(BLACK)
+
+        # load image of asteroid
+        self.image_og = asteroid_img
+        self.image_og.set_colorkey(BLACK)
+
+        # copy image into another image
+        self.image = self.image_og.copy()
         self.rect = self.image.get_rect()
+
         # hit circle of asteroid
         self.radius = int(self.rect.width * 0.9 / 2)
+
         # enemy appears off screen in random location
         self.rect.x = random.randrange(WIDTH - self.rect.width)
         self.rect.y = random.randrange(-100,-40)
+
+        # enemy gets random x and y speed it travels
         self.speedy = random.randrange(1, 8)
         self.speedx = random.randrange(-3,3)
 
+        self.rot = 0 # rotation
+        self.rot_speed = random.randrange(-9,9) # random rotation speed
+        self.last_update = pygame.time.get_ticks() # last update
+
+    # rotates the image
+    def rotate(self):
+        now = pygame.time.get_ticks()
+        # miliseconds since last roation
+        if now - self.last_update > 50:
+            self.last_update = now
+            # rotation speed
+            self.rot = (self.rot + self.rot_speed) % 360
+
+            # saves the rotated image in a new image
+            image_new = pygame.transform.rotate(self.image_og,self.rot)
+            center_old = self.rect.center # get the old mob center
+
+            # saves the image
+            self.image = image_new
+            self.rect = self.image.get_rect() # draws a new rectangle around it
+            self.rect.center = center_old #keeps it centered at same spot
+    #updates/moves the image
     def update(self):
+        self.rotate()
+        # moves the unit at a set speed x and y
         self.rect.y += self.speedy
         self.rect.x += self.speedx
+
+        #if the mob goes off the screen reset the mob to a random location again
         if self.rect.top > HEIGHT + 10 or self.rect.left < -20 or self.rect.right > WIDTH + 20:
             self.rect.x = random.randrange(WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100,-30)
@@ -91,9 +139,13 @@ class Mob(pygame.sprite.Sprite):
 class Shot(pygame.sprite.Sprite):
     def __init__(self,x,y):
         pygame.sprite.Sprite.__init__(self)
+
+        # load the image
         self.image = laser_img
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
+
+        # sets the bottom and center to given x and y
         self.rect.bottom = y
         self.rect.centerx = x
         self.speedy = -15
@@ -113,12 +165,13 @@ asteroid_img = pygame.image.load(path.join(img_dir,"asteroid.png")).convert()
 laser_img = pygame.image.load(path.join(img_dir,"laser.png")).convert()
 
 
-
+# Sprite Groups
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 shots = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player) # add player sprite to pygame
+
 
 # spawn range between 0-8
 for i in range(10):
@@ -127,7 +180,7 @@ for i in range(10):
     all_sprites.add(m)
     mobs.add(m)
 score = 0
-myfont = pygame.font.SysFont("monospace",15)
+
 
 
 # Game loop
@@ -164,19 +217,25 @@ while running:
         mobs.add(m)
         score += 1
 
+
     #check to see if a mob hit player (returns list of mobs that hit players)
     # make collision circler
     hits = pygame.sprite.spritecollide(player, mobs, False,pygame.sprite.collide_circle)
 
     # game loop will end
     if hits:
-        running = False
+        displayMsg("You Lose","monospace",25,WHITE,250,10)
+        pygame.display.flip()
+
 
     # Draw / render
     screen.fill(BLACK)
     screen.blit(background,background_rect)
-    label = myfont.render("Score:" + str(score),1, WHITE)
-    screen.blit(label,(0,0))
+
+    #label = myfont.render("Score:" + str(score),1, WHITE)
+    #screen.blit(label,(100,0))
+
+    displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
     all_sprites.draw(screen)
 
     # *after* drawing everything, flip the display
