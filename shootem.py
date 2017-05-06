@@ -81,7 +81,7 @@ class Mob(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         # load image of asteroid
-        self.image_og = asteroid_img
+        self.image_og = random.choice(asteroid_img)
         self.image_og.set_colorkey(BLACK)
 
         # copy image into another image
@@ -93,7 +93,7 @@ class Mob(pygame.sprite.Sprite):
 
         # enemy appears off screen in random location
         self.rect.x = random.randrange(WIDTH - self.rect.width)
-        self.rect.y = random.randrange(-100,-40)
+        self.rect.y = random.randrange(-150,-100)
 
         # enemy gets random x and y speed it travels
         self.speedy = random.randrange(1, 8)
@@ -161,7 +161,11 @@ class Shot(pygame.sprite.Sprite):
 background = pygame.image.load(path.join(img_dir,"space.jpg")).convert()
 background_rect = background.get_rect()
 player_img = pygame.image.load(path.join(img_dir,"ship.png")).convert()
-asteroid_img = pygame.image.load(path.join(img_dir,"asteroid.png")).convert()
+asteroid_img = []
+asteroid_list = ['asteroid.png','asteroid1.png','asteroid2.png','asteroid3.png','asteroid4.png'
+                ,'asteroid5.png','asteroid6.png','asteroid7.png',]
+for img in asteroid_list:
+    asteroid_img.append(pygame.image.load(path.join(img_dir,img)).convert())
 laser_img = pygame.image.load(path.join(img_dir,"laser.png")).convert()
 
 
@@ -173,71 +177,91 @@ player = Player()
 all_sprites.add(player) # add player sprite to pygame
 
 
-# spawn range between 0-8
-for i in range(10):
-    m = Mob()
-    # add mob to groups
-    all_sprites.add(m)
-    mobs.add(m)
-score = 0
 
-
-
-# Game loop
-running = True
-while running:
-
-    # keep loop running at the right speed
-    clock.tick(FPS)
-
-    # Process input (events)
-    for event in pygame.event.get():
-
-        # check for closing window
-        if event.type == pygame.QUIT:
-            running = False
-        # key was pressed down
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.shoot()
-
-
-
-    # Update
-    all_sprites.update()
-
-    #check to see if a bullet hit a mob if hit bullet and mob get deleted
-    hits = pygame.sprite.groupcollide(mobs,shots, True, True)
-
-
-    # if a hit lands spawn more mobs
-    for hit in hits:
+def main():
+    # spawn range between 0-8
+    for i in range(10):
         m = Mob()
+        # add mob to groups
         all_sprites.add(m)
         mobs.add(m)
-        score += 1
+    score = 0
 
 
-    #check to see if a mob hit player (returns list of mobs that hit players)
-    # make collision circler
-    hits = pygame.sprite.spritecollide(player, mobs, False,pygame.sprite.collide_circle)
 
-    # game loop will end
-    if hits:
-        displayMsg("You Lose","monospace",25,WHITE,250,10)
+    # Game loop
+    running = True
+    while running:
+
+        # keep loop running at the right speed
+        clock.tick(FPS)
+
+        # Process input (events)
+        for event in pygame.event.get():
+
+            # check for closing window
+            if event.type == pygame.QUIT:
+                running = False
+            # key was pressed down
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.shoot()
+
+
+
+        # Update
+        all_sprites.update()
+
+        #check to see if a bullet hit a mob if hit bullet and mob get deleted
+        hits = pygame.sprite.groupcollide(mobs,shots, True, True)
+
+
+        # if a hit lands spawn more mobs
+        for hit in hits:
+            m = Mob()
+            all_sprites.add(m)
+            mobs.add(m)
+            score += int((50 - hit.radius)/2)
+
+
+
+        #check to see if a mob hit player (returns list of mobs that hit players)
+        # make collision circler
+        hits = pygame.sprite.spritecollide(player, mobs, False,pygame.sprite.collide_circle)
+
+        # game loop will end
+        if hits:
+            displayMsg("You Lose","monospace",25,WHITE,250,10)
+            pygame.display.flip()
+            running = False
+
+
+        # Draw / render
+        screen.fill(BLACK)
+        screen.blit(background,background_rect)
+
+        #label = myfont.render("Score:" + str(score),1, WHITE)
+        #screen.blit(label,(100,0))
+
+        displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
+        all_sprites.draw(screen)
+
+        # *after* drawing everything, flip the display
         pygame.display.flip()
 
-
-    # Draw / render
+quit = False
+while quit != True:
     screen.fill(BLACK)
     screen.blit(background,background_rect)
-
-    #label = myfont.render("Score:" + str(score),1, WHITE)
-    #screen.blit(label,(100,0))
-
-    displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
-    all_sprites.draw(screen)
-
-    # *after* drawing everything, flip the display
+    displayMsg("Score:" + str(score),"monospace",25,WHITE,150,HEIGHT/2)
+    displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+20)
     pygame.display.flip()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            quit = True
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                quit = True
+            if event.key == pygame.K_P:
+                main()
 pygame.quit()
