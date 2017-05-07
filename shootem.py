@@ -57,7 +57,7 @@ class Explosion(pygame.sprite.Sprite):
         self.rect.center = center # center of explosion
         self.frame = 0 # starting animation frame
         self.last_update = pygame.time.get_ticks() # last update of animation
-        self.frame_rate = 30 # frame rate of explosion time
+        self.frame_rate = 25 # frame rate of explosion time
 
     def update(self):
         now = pygame.time.get_ticks()
@@ -204,12 +204,13 @@ class Shot(pygame.sprite.Sprite):
 background = pygame.image.load(path.join(img_dir,"space.jpg")).convert()
 background_rect = background.get_rect()
 player_img = pygame.image.load(path.join(img_dir,"ship.png")).convert()
+laser_img = pygame.image.load(path.join(img_dir,"laser.png")).convert()
+
 asteroid_img = []
 asteroid_list = ['asteroid.png','asteroid1.png','asteroid2.png','asteroid3.png','asteroid4.png'
                 ,'asteroid5.png','asteroid6.png','asteroid7.png',]
 for img in asteroid_list:
     asteroid_img.append(pygame.image.load(path.join(img_dir,img)).convert())
-laser_img = pygame.image.load(path.join(img_dir,"laser.png")).convert()
 
 explosion_img = []
 explosion_list = ['explosion.png','explosion2.png','explosion3.png'
@@ -225,6 +226,7 @@ pygame.mixer.music.load(path.join(sound_dir,'background.wav'))
 pygame.mixer.music.set_volume(0.8)
 
 explosion_snd = []
+
 explosion_list = ['explosion.wav','explosion2.wav','explosion3.wav','explosion4.wav']
 for snd in explosion_list:
     explosion_snd.append(pygame.mixer.Sound(path.join(sound_dir,snd)))
@@ -246,109 +248,131 @@ all_sprites.add(player)
 
 
 
-# spawn range between 0-8
-for i in range(10):
-    m = Mob()
-    # add mob to groups
-    all_sprites.add(m)
-    mobs.add(m)
-
-
 pygame.mixer.music.play(loops= -1)
-
 # Start menu
 start = False
+high_score = getHighScore() # get the high score
 while start != True:
     screen.blit(background,background_rect)
     displayMsg("Pew Pew Rocks","monospace",30,BLUE,80,100)
+    displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
     displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
     pygame.display.flip()
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 start = True
+def main():
 
-score = 0
-high_score = getHighScore() # get the high score
-# Game loop
-running = True
-while running:
-
-    # keep loop running at the right speed
-    clock.tick(FPS)
-
-    # Process input (events)
-    for event in pygame.event.get():
-
-        # check for closing window
-        if event.type == pygame.QUIT:
-            running = False
-        # key was pressed down
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.shoot()
-
-
-
-    # Update
-    all_sprites.update()
-
-    #check to see if a bullet hit a mob if hit bullet and mob get deleted
-    hits = pygame.sprite.groupcollide(mobs,shots, True, True)
-
-
-    # if a hit lands spawn more mobs
-    for hit in hits:
+    # spawn range between 0-8
+    for i in range(10):
         m = Mob()
+        # add mob to groups
         all_sprites.add(m)
         mobs.add(m)
-        score += int((50 - hit.radius)/2)
-        explosion = Explosion(hit.rect.center)
-        all_sprites.add(explosion)
-        random.choice(explosion_snd).play()
 
-    #check to see if a mob hit player (returns list of mobs that hit players)
-    # make collision circler
-    hits = pygame.sprite.spritecollide(player, mobs, False,pygame.sprite.collide_circle)
+    score = 0
+    # Game loop
+    running = True
+    while running:
 
-    # game loop will end
-    if hits:
-        explosion = Explosion(player.rect.center)
-        all_sprites.add(explosion)
-        all_sprites.empty
-        mobs.empty
-        shots.empty()
-        die_snd.play()
-        running = False
+        # keep loop running at the right speed
+        clock.tick(FPS)
+        # Process input (events)
+        for event in pygame.event.get():
+
+            # check for closing window
+            if event.type == pygame.QUIT:
+                running = False
+            # key was pressed down
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.shoot()
 
 
-    # Draw / render
-    screen.fill(BLACK)
-    screen.blit(background,background_rect)
 
-    #label = myfont.render("Score:" + str(score),1, WHITE)
-    #screen.blit(label,(100,0))
+        # Update
+        all_sprites.update()
 
-    displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
-    if score > high_score:
-        displayMsg("HighScore:" + str(score),"monospace",20,WHITE,220,0) # display high score
-    else:
-        displayMsg("HighScore:" + str(high_score),"monospace",20,WHITE,220,0) # display high score
-    all_sprites.draw(screen)
+        #check to see if a bullet hit a mob if hit bullet and mob get deleted
+        hits = pygame.sprite.groupcollide(mobs,shots, True, True)
 
-    # *after* drawing everything, flip the display
-    pygame.display.flip()
+
+        # if a hit lands spawn more mobs
+        for hit in hits:
+            m = Mob()
+            all_sprites.add(m)
+            mobs.add(m)
+            score += int((50 - hit.radius)/2)
+            explosion = Explosion(hit.rect.center)
+            all_sprites.add(explosion)
+            random.choice(explosion_snd).play()
+
+        #check to see if a mob hit player (returns list of mobs that hit players)
+        # make collision circler
+        hits = pygame.sprite.spritecollide(player, mobs, False,pygame.sprite.collide_circle)
+
+        # player is hit
+        if hits:
+            # spawns player explosion
+            die_explosion = Explosion(player.rect.center)
+            all_sprites.add(die_explosion)
+            player.kill()
+            # play die sound and end game loop
+            die_snd.play()
+
+        if not player.alive() and not die_explosion.alive():
+            all_sprites.empty()
+            mobs.empty()
+            shots.empty()
+            running = False
+            return score
+
+        # Draw / render
+        screen.fill(BLACK)
+        screen.blit(background,background_rect)
+
+        #label = myfont.render("Score:" + str(score),1, WHITE)
+        #screen.blit(label,(100,0))
+
+        displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
+        if score > high_score:
+            displayMsg("HighScore:" + str(score),"monospace",20,WHITE,220,0) # display high score
+        else:
+            displayMsg("HighScore:" + str(high_score),"monospace",20,WHITE,220,0) # display high score
+        all_sprites.draw(screen)
+
+        # *after* drawing everything, flip the display
+        pygame.display.flip()
+
+
+
 
 # End Screen
+score = main()
+# if score > highscore
+higher = False
+if score > high_score:
+    higher = True
 quit = False
 while quit != True:
+
     screen.blit(background,background_rect)
-    # if the score was higher than high score write to the file
-    if score > high_score:
+    # if the player got a high score, displays and writes new high score
+    if higher:
+        displayMsg("New High Score!!!","monospace",25,WHITE,80,30)
+        displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
+        displayMsg("Press SPACE to Try Again!","monospace",25,WHITE,25,HEIGHT/2+20)
+        displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+40)
         writeHighScore(score)
-    displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
-    displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+20)
-    pygame.display.flip()
+        high_score = score
+        pygame.display.flip()
+    # regular score
+    else:
+        displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
+        displayMsg("Press SPACE to Try Again!","monospace",25,WHITE,25,HEIGHT/2+20)
+        displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+40)
+        pygame.display.flip()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -356,4 +380,13 @@ while quit != True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 quit = True
+            if event.key == pygame.K_SPACE:
+                player = Player()
+                all_sprites.add(player)
+                score = main()
+                # if score > highscore
+                higher = False
+                if score > high_score:
+                    higher = True
+
 pygame.quit()
