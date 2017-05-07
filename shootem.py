@@ -4,6 +4,9 @@ from os import path
 
 # finds the directory to img
 img_dir = path.join(path.dirname(__file__),'img')
+# find the directory to sound
+sound_dir = path.join(path.dirname(__file__),'sound')
+
 
 WIDTH = 400
 HEIGHT = 600
@@ -73,6 +76,7 @@ class Player(pygame.sprite.Sprite):
         shot = Shot(self.rect.centerx, self.rect.top)
         all_sprites.add(shot) # add shot sprite to all sprites
         shots.add(shot) # add shot to shots gropup
+        laser_sound.play()
 
 
 # enemy units
@@ -168,92 +172,109 @@ for img in asteroid_list:
     asteroid_img.append(pygame.image.load(path.join(img_dir,img)).convert())
 laser_img = pygame.image.load(path.join(img_dir,"laser.png")).convert()
 
+# load game sound
+laser_sound = pygame.mixer.Sound(path.join(sound_dir,"Laser.wav"))
+pygame.mixer.music.load(path.join(sound_dir,'background.wav'))
+pygame.mixer.music.set_volume(0.8)
+
+explosion_snd = []
+explosion_list = ['explosion.wav','explosion2.wav','explosion3.wav','explosion4.wav']
+for snd in explosion_list:
+    explosion_snd.append(pygame.mixer.Sound(path.join(sound_dir,snd)))
+for snd in explosion_snd:
+    snd.set_volume(0.4)
+
+die_snd = pygame.mixer.Sound(path.join(sound_dir,"die.wav"))
 
 # Sprite Groups
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
 shots = pygame.sprite.Group()
+
+
+
+# create and add player to sprite group
 player = Player()
-all_sprites.add(player) # add player sprite to pygame
+all_sprites.add(player)
+
+# spawn range between 0-8
+for i in range(10):
+    m = Mob()
+    # add mob to groups
+    all_sprites.add(m)
+    mobs.add(m)
 
 
 
-def main():
-    # spawn range between 0-8
-    for i in range(10):
+
+score = 0
+pygame.mixer.music.play(loops= -1)
+# Game loop
+running = True
+while running:
+
+    # keep loop running at the right speed
+    clock.tick(FPS)
+
+    # Process input (events)
+    for event in pygame.event.get():
+
+        # check for closing window
+        if event.type == pygame.QUIT:
+            running = False
+        # key was pressed down
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.shoot()
+
+
+
+    # Update
+    all_sprites.update()
+
+    #check to see if a bullet hit a mob if hit bullet and mob get deleted
+    hits = pygame.sprite.groupcollide(mobs,shots, True, True)
+
+
+    # if a hit lands spawn more mobs
+    for hit in hits:
         m = Mob()
-        # add mob to groups
         all_sprites.add(m)
         mobs.add(m)
-    score = 0
+        score += int((50 - hit.radius)/2)
+        random.choice(explosion_snd).play()
+
+    #check to see if a mob hit player (returns list of mobs that hit players)
+    # make collision circler
+    hits = pygame.sprite.spritecollide(player, mobs, False,pygame.sprite.collide_circle)
+
+    # game loop will end
+    if hits:
+        all_sprites.empty
+        mobs.empty
+        shots.empty()
+        die_snd.play()
+        running = False
 
 
+    # Draw / render
+    screen.fill(BLACK)
+    screen.blit(background,background_rect)
 
-    # Game loop
-    running = True
-    while running:
+    #label = myfont.render("Score:" + str(score),1, WHITE)
+    #screen.blit(label,(100,0))
 
-        # keep loop running at the right speed
-        clock.tick(FPS)
+    displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
+    all_sprites.draw(screen)
 
-        # Process input (events)
-        for event in pygame.event.get():
+    # *after* drawing everything, flip the display
+    pygame.display.flip()
 
-            # check for closing window
-            if event.type == pygame.QUIT:
-                running = False
-            # key was pressed down
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    player.shoot()
-
-
-
-        # Update
-        all_sprites.update()
-
-        #check to see if a bullet hit a mob if hit bullet and mob get deleted
-        hits = pygame.sprite.groupcollide(mobs,shots, True, True)
-
-
-        # if a hit lands spawn more mobs
-        for hit in hits:
-            m = Mob()
-            all_sprites.add(m)
-            mobs.add(m)
-            score += int((50 - hit.radius)/2)
-
-
-
-        #check to see if a mob hit player (returns list of mobs that hit players)
-        # make collision circler
-        hits = pygame.sprite.spritecollide(player, mobs, False,pygame.sprite.collide_circle)
-
-        # game loop will end
-        if hits:
-            displayMsg("You Lose","monospace",25,WHITE,250,10)
-            pygame.display.flip()
-            running = False
-
-
-        # Draw / render
-        screen.fill(BLACK)
-        screen.blit(background,background_rect)
-
-        #label = myfont.render("Score:" + str(score),1, WHITE)
-        #screen.blit(label,(100,0))
-
-        displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
-        all_sprites.draw(screen)
-
-        # *after* drawing everything, flip the display
-        pygame.display.flip()
 
 quit = False
 while quit != True:
-    screen.fill(BLACK)
     screen.blit(background,background_rect)
-    displayMsg("Score:" + str(score),"monospace",25,WHITE,150,HEIGHT/2)
+    displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
     displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+20)
     pygame.display.flip()
     for event in pygame.event.get():
@@ -262,6 +283,4 @@ while quit != True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 quit = True
-            if event.key == pygame.K_P:
-                main()
 pygame.quit()
