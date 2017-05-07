@@ -34,6 +34,19 @@ def displayMsg(msg,font,size,color,x,y):
     label = myfont.render(msg,1,color); # makes a label with a msg and color with it
     screen.blit(label,(x,y)) # stages label to screen at x and y cordinate
 
+def getHighScore():
+    highscore_file = open("high_score.txt","r")
+    high_score = int(highscore_file.read())
+    highscore_file.close()
+    return high_score
+
+def writeHighScore(highscore):
+    highscore_file = open("high_score.txt","w")
+    highscore_file.write(str(highscore))
+    highscore_file.close()
+
+
+
 # player ship class
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -197,6 +210,8 @@ shots = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
 
+
+
 # spawn range between 0-8
 for i in range(10):
     m = Mob()
@@ -205,10 +220,22 @@ for i in range(10):
     mobs.add(m)
 
 
+pygame.mixer.music.play(loops= -1)
 
+# Start menu
+start = False
+while start != True:
+    screen.blit(background,background_rect)
+    displayMsg("Pew Pew Rocks","monospace",30,BLUE,80,100)
+    displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
+    pygame.display.flip()
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                start = True
 
 score = 0
-pygame.mixer.music.play(loops= -1)
+high_score = getHighScore()
 # Game loop
 running = True
 while running:
@@ -265,18 +292,26 @@ while running:
     #screen.blit(label,(100,0))
 
     displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
+    if score > high_score:
+        displayMsg("HighScore:" + str(score),"monospace",20,WHITE,220,0) # display high score
+    else:
+        displayMsg("HighScore:" + str(high_score),"monospace",20,WHITE,220,0) # display high score
     all_sprites.draw(screen)
 
     # *after* drawing everything, flip the display
     pygame.display.flip()
 
-
+# End Screen
 quit = False
 while quit != True:
     screen.blit(background,background_rect)
+
+    if score > high_score:
+        writeHighScore(score)
     displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
     displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+20)
     pygame.display.flip()
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit = True
