@@ -1,3 +1,5 @@
+#!/usr/bin/env python.
+# Comet Crusher
 import pygame
 import random
 from os import path
@@ -86,11 +88,12 @@ class Player(pygame.sprite.Sprite):
 
         # hit circle of the player ship
         self.radius = 20
-
-
         self.rect.centerx = WIDTH/2 # x cordinate of sprite
         self.rect.bottom = HEIGHT - 10 # y cordinate of sprite
         self.speedx = 0 # player does not move til gets command
+
+        self.shoot_delay = 180 # shot delay inbetween shots
+        self.last_shot = pygame.time.get_ticks()
 
     def update(self):
         self.speedx = 0
@@ -101,6 +104,8 @@ class Player(pygame.sprite.Sprite):
             self.speedx = -8
         if keystate[pygame.K_RIGHT]:
             self.speedx = 8
+        if keystate[pygame.K_SPACE]:
+            self.shoot()
 
         # moves the player along the x cordinate
         self.rect.x += self.speedx
@@ -112,11 +117,14 @@ class Player(pygame.sprite.Sprite):
             self.rect.left = 0
 
     def shoot(self):
-        # creates shot sprite starting point is top of player sprite
-        shot = Shot(self.rect.centerx, self.rect.top)
-        all_sprites.add(shot) # add shot sprite to all sprites
-        shots.add(shot) # add shot to shots gropup
-        laser_sound.play()
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_shot = now
+            # creates shot sprite starting point is top of player sprite
+            shot = Shot(self.rect.centerx, self.rect.top)
+            all_sprites.add(shot) # add shot sprite to all sprites
+            shots.add(shot) # add shot to shots gropup
+            laser_sound.play()
 
 
 # enemy units
@@ -254,11 +262,13 @@ start = False
 high_score = getHighScore() # get the high score
 while start != True:
     screen.blit(background,background_rect)
-    displayMsg("Pew Pew Rocks","monospace",30,BLUE,80,100)
+    displayMsg("Comet Crush","monospace",38,WHITE,80,100)
     displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
     displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
     pygame.display.flip()
     for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 start = True
@@ -272,23 +282,23 @@ def main():
         mobs.add(m)
 
     score = 0
+    hitscore = 0
     # Game loop
     running = True
     while running:
 
         # keep loop running at the right speed
         clock.tick(FPS)
+
         # Process input (events)
         for event in pygame.event.get():
-
             # check for closing window
             if event.type == pygame.QUIT:
                 running = False
-            # key was pressed down
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    player.shoot()
-
+        # key was pressed down
+            #if event.type == pygame.KEYDOWN:
+                #if event.key == pygame.K_SPACE:
+                #    player.shoot()
 
 
         # Update
@@ -304,6 +314,7 @@ def main():
             all_sprites.add(m)
             mobs.add(m)
             score += int((50 - hit.radius)/2)
+            hitscore += 1
             explosion = Explosion(hit.rect.center)
             all_sprites.add(explosion)
             random.choice(explosion_snd).play()
