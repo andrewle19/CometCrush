@@ -34,18 +34,45 @@ def displayMsg(msg,font,size,color,x,y):
     label = myfont.render(msg,1,color); # makes a label with a msg and color with it
     screen.blit(label,(x,y)) # stages label to screen at x and y cordinate
 
+# opens the highscore file then reads and returns the highscore
 def getHighScore():
     highscore_file = open("high_score.txt","r")
     high_score = int(highscore_file.read())
     highscore_file.close()
     return high_score
 
+# writes new highscore to the highscore file
 def writeHighScore(highscore):
     highscore_file = open("high_score.txt","w")
     highscore_file.write(str(highscore))
     highscore_file.close()
 
 
+# explosion sprite class
+class Explosion(pygame.sprite.Sprite):
+    def __init__(self, center):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = explosion_img[0]# starting explosion_img
+        self.rect = self.image.get_rect()
+        self.rect.center = center # center of explosion
+        self.frame = 0 # starting animation frame
+        self.last_update = pygame.time.get_ticks() # last update of animation
+        self.frame_rate = 30 # frame rate of explosion time
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        # if its time for next frame
+        if now - self.last_update > self.frame_rate:
+            self.last_update = now
+            self.frame += 1
+            # kill sprite at end of animation
+            if self.frame == len(explosion_img):
+                self.kill()
+            else:
+                center = self.rect.center # set to current center
+                self.image = explosion_img[self.frame] # advance frame
+                self.rect = self.image.get_rect()
+                self.rect.center = center
 
 # player ship class
 class Player(pygame.sprite.Sprite):
@@ -151,7 +178,6 @@ class Mob(pygame.sprite.Sprite):
             self.speedy = random.randrange(1, 9)
 
 
-
 # shots fire
 class Shot(pygame.sprite.Sprite):
     def __init__(self,x,y):
@@ -184,6 +210,14 @@ asteroid_list = ['asteroid.png','asteroid1.png','asteroid2.png','asteroid3.png',
 for img in asteroid_list:
     asteroid_img.append(pygame.image.load(path.join(img_dir,img)).convert())
 laser_img = pygame.image.load(path.join(img_dir,"laser.png")).convert()
+
+explosion_img = []
+explosion_list = ['explosion.png','explosion2.png','explosion3.png'
+                ,'explosion4.png','explosion5.png','explosion6.png','explosion7.png','explosion8.png']
+for img in explosion_list:
+    expl = pygame.image.load(path.join(img_dir,img)).convert()
+    expl.set_colorkey(BLACK)
+    explosion_img.append(pygame.transform.scale(expl,(75,75)))
 
 # load game sound
 laser_sound = pygame.mixer.Sound(path.join(sound_dir,"Laser.wav"))
@@ -235,7 +269,7 @@ while start != True:
                 start = True
 
 score = 0
-high_score = getHighScore()
+high_score = getHighScore() # get the high score
 # Game loop
 running = True
 while running:
@@ -269,6 +303,8 @@ while running:
         all_sprites.add(m)
         mobs.add(m)
         score += int((50 - hit.radius)/2)
+        explosion = Explosion(hit.rect.center)
+        all_sprites.add(explosion)
         random.choice(explosion_snd).play()
 
     #check to see if a mob hit player (returns list of mobs that hit players)
@@ -277,6 +313,8 @@ while running:
 
     # game loop will end
     if hits:
+        explosion = Explosion(player.rect.center)
+        all_sprites.add(explosion)
         all_sprites.empty
         mobs.empty
         shots.empty()
@@ -305,7 +343,7 @@ while running:
 quit = False
 while quit != True:
     screen.blit(background,background_rect)
-
+    # if the score was higher than high score write to the file
     if score > high_score:
         writeHighScore(score)
     displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
