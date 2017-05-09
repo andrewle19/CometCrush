@@ -1,5 +1,5 @@
 #!/usr/bin/env python.
-# Comet Crusher
+# Comet Crush
 import pygame
 import random
 from os import path
@@ -148,7 +148,7 @@ class Mob(pygame.sprite.Sprite):
         self.rect.y = random.randrange(-150,-100)
 
         # enemy gets random x and y speed it travels
-        self.speedy = random.randrange(1, 10)
+        self.speedy = random.randrange(1, 12)
         self.speedx = random.randrange(-3,3)
 
         self.rot = 0 # rotation
