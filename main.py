@@ -1,5 +1,7 @@
 #!/usr/bin/env python.
 # Comet Crush
+# music by AphixSky - For now
+# Art by Kenny
 import pygame
 import random
 from os import path
@@ -92,8 +94,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = HEIGHT - 10 # y cordinate of sprite
         self.speedx = 0 # player does not move til gets command
 
-        #self.shoot_delay = 180 # shot delay inbetween shots
-        #self.last_shot = pygame.time.get_ticks()
+        self.shoot_delay = 180 # shot delay inbetween shots
+        self.last_shot = pygame.time.get_ticks()
 
     def update(self):
         self.speedx = 0
@@ -104,8 +106,8 @@ class Player(pygame.sprite.Sprite):
             self.speedx = -8
         if keystate[pygame.K_RIGHT]:
             self.speedx = 8
-        #if keystate[pygame.K_SPACE]:
-            #self.shoot()
+        if keystate[pygame.K_SPACE]:
+            self.shoot()
 
         # moves the player along the x cordinate
         self.rect.x += self.speedx
@@ -117,14 +119,14 @@ class Player(pygame.sprite.Sprite):
             self.rect.left = 0
 
     def shoot(self):
-        #now = pygame.time.get_ticks()
-        #if now - self.last_shot > self.shoot_delay:
-            #self.last_shot = now
-            # creates shot sprite starting point is top of player sprite
-        shot = Shot(self.rect.centerx, self.rect.top)
-        all_sprites.add(shot) # add shot sprite to all sprites
-        shots.add(shot) # add shot to shots gropup
-        laser_sound.play()
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_shot = now
+            #creates shot sprite starting point is top of player sprite
+            shot = Shot(self.rect.centerx, self.rect.top)
+            all_sprites.add(shot) # add shot sprite to all sprites
+            shots.add(shot) # add shot to shots gropup
+            laser_sound.play()
 
 
 # enemy units
@@ -231,7 +233,7 @@ for img in explosion_list:
 # load game sound
 laser_sound = pygame.mixer.Sound(path.join(sound_dir,"Laser.wav"))
 pygame.mixer.music.load(path.join(sound_dir,'background.wav'))
-pygame.mixer.music.set_volume(0.8)
+pygame.mixer.music.set_volume(0.5)
 
 explosion_snd = []
 
@@ -296,9 +298,9 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
          #key was pressed down
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    player.shoot()
+            #if event.type == pygame.KEYDOWN:
+                #if event.key == pygame.K_SPACE:
+                    #player.shoot()
 
 
         # Update
