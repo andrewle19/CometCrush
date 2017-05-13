@@ -233,7 +233,7 @@ for img in explosion_list:
 # load game sound
 laser_sound = pygame.mixer.Sound(path.join(sound_dir,"Laser.wav"))
 pygame.mixer.music.load(path.join(sound_dir,'background.wav'))
-pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.set_volume(0.25)
 
 explosion_snd = []
 
