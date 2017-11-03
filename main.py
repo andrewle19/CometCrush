@@ -1,6 +1,6 @@
 #!/usr/bin/env python.
 # Comet Crush
-# music by AphixSky - For now
+# music by AphixSky
 # Art by Kenny
 import pygame
 import random
@@ -213,8 +213,13 @@ class Shot(pygame.sprite.Sprite):
 #load all game graphics
 background = pygame.image.load(path.join(img_dir,"space.jpg")).convert()
 background_rect = background.get_rect()
-player_img = pygame.image.load(path.join(img_dir,"ship.png")).convert()
+
+# load in a random ship
+ship_list = ["shipRed.png","shipBlue.png","shipOrange.png","shipGreen.png"]
+player_img = pygame.image.load(path.join(img_dir,ship_list[random.randint(0,3)])).convert()
 laser_img = pygame.image.load(path.join(img_dir,"laser.png")).convert()
+
+
 
 asteroid_img = []
 asteroid_list = ['asteroid.png','asteroid1.png','asteroid2.png','asteroid3.png','asteroid4.png'
@@ -241,7 +246,7 @@ explosion_list = ['explosion.wav','explosion2.wav','explosion3.wav','explosion4.
 for snd in explosion_list:
     explosion_snd.append(pygame.mixer.Sound(path.join(sound_dir,snd)))
 for snd in explosion_snd:
-    snd.set_volume(0.4)
+    snd.set_volume(0.25)
 
 die_snd = pygame.mixer.Sound(path.join(sound_dir,"die.wav"))
 
@@ -252,28 +257,39 @@ shots = pygame.sprite.Group()
 
 
 
-# create and add player to sprite group
-player = Player()
-all_sprites.add(player)
-
-
-
 pygame.mixer.music.play(loops= -1)
 # Start menu
 start = False
 high_score = getHighScore() # get the high score
+colorIndex = 0
 while start != True:
     screen.blit(background,background_rect)
     displayMsg("Comet Crush","monospace",38,WHITE,80,100)
     displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
     displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
+    displayMsg("Press C to Change Ship","monospace",25,WHITE,40,HEIGHT/2+25)
+    player_img = pygame.transform.scale(player_img, (70,58))
+    player_img.set_colorkey(BLACK)
+    screen.blit(player_img,(WIDTH/2-20,HEIGHT/2-120))
+    # *after* drawing everything, flip the display
     pygame.display.flip()
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 start = True
+                # # create and add player to sprite group
+                player = Player()
+                all_sprites.add(player)
+            if event.key == pygame.K_c:
+                if(colorIndex == 4):
+                    colorIndex = 0
+                player_img = pygame.image.load(path.join(img_dir,ship_list[colorIndex])).convert()
+                colorIndex += 1
+
+
 def main():
 
     # spawn range between 0-8
@@ -353,6 +369,9 @@ def main():
             displayMsg("HighScore:" + str(score),"monospace",20,WHITE,220,0) # display high score
         else:
             displayMsg("HighScore:" + str(high_score),"monospace",20,WHITE,220,0) # display high score
+
+
+
         all_sprites.draw(screen)
 
         # *after* drawing everything, flip the display
