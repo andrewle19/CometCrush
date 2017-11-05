@@ -419,7 +419,10 @@ def endScreen():
         else:
             displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
             displayMsg("Press SPACE to Try Again!","monospace",25,WHITE,25,HEIGHT/2+20)
-            displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+40)
+            displayMsg("Press ESC for MainMenu","monospace",25,WHITE,40,HEIGHT/2+40)
+            displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+60)
+
+
             pygame.display.flip()
 
         for event in pygame.event.get():
