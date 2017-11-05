@@ -31,7 +31,7 @@ pygame.mixer.init() # deals with sound
 screen = pygame.display.set_mode((WIDTH, HEIGHT)) # sets the creen
 pygame.display.set_caption("Shooter")
 clock = pygame.time.Clock()
-
+STATE = 0 # state the game is currently at 0 = menu, 1 = playing, 2 = end Screen
 # display any text to screen
 def displayMsg(msg,font,size,color,x,y):
     myfont = pygame.font.SysFont(font,size,True) # gets font/font size/ bold
@@ -237,8 +237,9 @@ for img in explosion_list:
 
 # load game sound
 laser_sound = pygame.mixer.Sound(path.join(sound_dir,"Laser.wav"))
+laser_sound.set_volume(0.20)
 pygame.mixer.music.load(path.join(sound_dir,'background.wav'))
-pygame.mixer.music.set_volume(0.25)
+pygame.mixer.music.set_volume(0.3)
 
 explosion_snd = []
 
@@ -249,6 +250,7 @@ for snd in explosion_snd:
     snd.set_volume(0.25)
 
 die_snd = pygame.mixer.Sound(path.join(sound_dir,"die.wav"))
+die_snd.set_volume(0.20)
 
 # Sprite Groups
 all_sprites = pygame.sprite.Group()
@@ -256,43 +258,49 @@ mobs = pygame.sprite.Group()
 shots = pygame.sprite.Group()
 
 
-
+# loop the background music
 pygame.mixer.music.play(loops= -1)
+
+
+
 # Start menu
-start = False
-high_score = getHighScore() # get the high score
-colorIndex = 0
-while start != True:
-    screen.blit(background,background_rect)
-    displayMsg("Comet Crush","monospace",38,WHITE,80,100)
-    displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
-    displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
-    displayMsg("Press C to Change Ship","monospace",25,WHITE,40,HEIGHT/2+25)
-    player_img = pygame.transform.scale(player_img, (70,58))
-    player_img.set_colorkey(BLACK)
-    screen.blit(player_img,(WIDTH/2-20,HEIGHT/2-120))
-    # *after* drawing everything, flip the display
-    pygame.display.flip()
+#First game state the Menu: 0
+def menu():
+    global player_img, player, STATE
+    colorIndex = 0
+    start = False
+    while start != True:
+        screen.blit(background,background_rect)
+        displayMsg("Comet Crush","monospace",38,WHITE,80,100)
+        displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
+        displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
+        displayMsg("Press C to Change Ship","monospace",25,WHITE,40,HEIGHT/2+25)
+        player_img = pygame.transform.scale(player_img, (70,58))
+        player_img.set_colorkey(BLACK)
+        screen.blit(player_img,(WIDTH/2-20,HEIGHT/2-120))
+        # *after* drawing everything, flip the display
+        pygame.display.flip()
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                start = True
-                # # create and add player to sprite group
-                player = Player()
-                all_sprites.add(player)
-            if event.key == pygame.K_c:
-                if(colorIndex == 4):
-                    colorIndex = 0
-                player_img = pygame.image.load(path.join(img_dir,ship_list[colorIndex])).convert()
-                colorIndex += 1
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    start = True
+                    # # create and add player to sprite group
+                    player = Player()
+                    all_sprites.add(player)
+                    STATE = 1
+                if event.key == pygame.K_c:
+                    if(colorIndex == 4):
+                        colorIndex = 0
+                    player_img = pygame.image.load(path.join(img_dir,ship_list[colorIndex])).convert()
+                    colorIndex += 1
 
-
+# the main game state: 1
 def main():
-
-    # spawn range between 0-8
+    global player, all_sprites
+    # spawn range between 0-10
     for i in range(10):
         m = Mob()
         # add mob to groups
@@ -303,8 +311,8 @@ def main():
     hitscore = 0
     # Game loop
     running = True
+    pause = False
     while running:
-
         # keep loop running at the right speed
         clock.tick(FPS)
 
@@ -313,6 +321,15 @@ def main():
             # check for closing window
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    if(pause):
+                        pause = False
+
+                    else:
+                        pause = True
+
+
          #key was pressed down
             #if event.type == pygame.KEYDOWN:
                 #if event.key == pygame.K_SPACE:
@@ -320,7 +337,8 @@ def main():
 
 
         # Update
-        all_sprites.update()
+        if(pause != True):
+            all_sprites.update()
 
         #check to see if a bullet hit a mob if hit bullet and mob get deleted
         hits = pygame.sprite.groupcollide(mobs,shots, True, True)
@@ -374,52 +392,73 @@ def main():
 
         all_sprites.draw(screen)
 
+        if(pause):
+            displayMsg("PAUSED","monospace",50,WHITE,110,HEIGHT/2-10)
+
         # *after* drawing everything, flip the display
         pygame.display.flip()
 
+# the end screen state of the game : 2
+def endScreen():
+    global STATE, run,higher,high_score, all_sprites,player
+    quit = False
+    while quit != True:
 
+        screen.fill(BLACK)
+        screen.blit(background,background_rect)
+        # if the player got a high score, displays and writes new high score
+        if higher:
+            displayMsg("New High Score!!!","monospace",25,WHITE,80,30)
+            displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
+            displayMsg("Press SPACE to Try Again!","monospace",25,WHITE,25,HEIGHT/2+20)
+            displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+40)
+            writeHighScore(score)
+            high_score = score
+            pygame.display.flip()
+        # regular score
+        else:
+            displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
+            displayMsg("Press SPACE to Try Again!","monospace",25,WHITE,25,HEIGHT/2+20)
+            displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+40)
+            pygame.display.flip()
 
-
-# End Screen
-score = main()
-# if score > highscore
-higher = False
-if score > high_score:
-    higher = True
-quit = False
-while quit != True:
-
-    screen.fill(BLACK)
-    screen.blit(background,background_rect)
-    # if the player got a high score, displays and writes new high score
-    if higher:
-        displayMsg("New High Score!!!","monospace",25,WHITE,80,30)
-        displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
-        displayMsg("Press SPACE to Try Again!","monospace",25,WHITE,25,HEIGHT/2+20)
-        displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+40)
-        writeHighScore(score)
-        high_score = score
-        pygame.display.flip()
-    # regular score
-    else:
-        displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
-        displayMsg("Press SPACE to Try Again!","monospace",25,WHITE,25,HEIGHT/2+20)
-        displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+40)
-        pygame.display.flip()
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            quit = True
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 quit = True
-            if event.key == pygame.K_SPACE:
-                player = Player()
-                all_sprites.add(player)
-                score = main()
-                # if score > highscore
-                higher = False
-                if score > high_score:
-                    higher = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    quit = True
+                    run = False
+                if event.key == pygame.K_SPACE:
+                    player = Player()
+                    all_sprites.add(player)
+                    STATE = 1
+                    quit = True
+                if event.key == pygame.K_ESCAPE:
+                    STATE = 0
+                    quit = True
+
+
+
+start = False
+high_score = getHighScore() # get the high score
+run = True
+while(run):
+
+    # menu state
+    if(STATE == 0):
+        menu()
+    # main game state
+    elif(STATE == 1):
+        # End Screen
+        score = main()
+        # if score > highscore
+        higher = False
+        if score > high_score:
+            higher = True
+        STATE = 2
+    # end game state
+    elif(STATE == 2):
+        endScreen()
 
 pygame.quit()
