@@ -32,6 +32,9 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT)) # sets the creen
 pygame.display.set_caption("Shooter")
 clock = pygame.time.Clock()
 STATE = 0 # state the game is currently at 0 = menu, 1 = playing, 2 = end Screen
+musicplaying = False # variable to check if the music is playing
+
+
 # display any text to screen
 def displayMsg(msg,font,size,color,x,y):
     myfont = pygame.font.SysFont(font,size,True) # gets font/font size/ bold
@@ -150,7 +153,7 @@ class Mob(pygame.sprite.Sprite):
         self.rect.y = random.randrange(-150,-100)
 
         # enemy gets random x and y speed it travels
-        self.speedy = random.randrange(1, 12)
+        self.speedy = random.randrange(2,15)
         self.speedx = random.randrange(-3,3)
 
         self.rot = 0 # rotation
@@ -258,23 +261,23 @@ mobs = pygame.sprite.Group()
 shots = pygame.sprite.Group()
 
 
-# loop the background music
-pygame.mixer.music.play(loops= -1)
+
 
 
 
 # Start menu
 #First game state the Menu: 0
 def menu():
-    global player_img, player, STATE
+    global player_img, player, STATE, musicplaying
     colorIndex = 0
     start = False
     while start != True:
         screen.blit(background,background_rect)
-        displayMsg("Comet Crush","monospace",38,WHITE,80,100)
-        displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
+        displayMsg("Asteroid Assault","monospace",38,WHITE,20,100)
+        # displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
         displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
         displayMsg("Press C to Change Ship","monospace",25,WHITE,40,HEIGHT/2+25)
+        displayMsg("Press M to Toggle Music","monospace",25,WHITE,40,HEIGHT/2+45)
         player_img = pygame.transform.scale(player_img, (70,58))
         player_img.set_colorkey(BLACK)
         screen.blit(player_img,(WIDTH/2-20,HEIGHT/2-120))
@@ -290,12 +293,24 @@ def menu():
                     # # create and add player to sprite group
                     player = Player()
                     all_sprites.add(player)
+                    # loop the background music
+                    # pygame.mixer.music.play(loops= -1)
                     STATE = 1
                 if event.key == pygame.K_c:
                     if(colorIndex == 4):
                         colorIndex = 0
                     player_img = pygame.image.load(path.join(img_dir,ship_list[colorIndex])).convert()
                     colorIndex += 1
+                if event.key == pygame.K_m:
+                    if(musicplaying == False):
+                        pygame.mixer.music.set_volume(0.3)
+                        pygame.mixer.music.play(loops = -1)
+                        musicplaying = True
+                    else:
+                        pygame.mixer.music.set_volume(0)
+                        musicplaying = False
+
+
 
 # the main game state: 1
 def main():
