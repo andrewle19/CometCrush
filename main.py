@@ -5,6 +5,8 @@
 import pygame
 import random
 from os import path
+import os
+
 
 # finds the directory to img
 img_dir = path.join(path.dirname(__file__),'img')
@@ -83,7 +85,7 @@ class Explosion(pygame.sprite.Sprite):
 
 # player ship class
 class Player(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self,timetrial):
         pygame.sprite.Sprite.__init__(self)
 
         # sets the player image to specefic size // load image
@@ -99,7 +101,7 @@ class Player(pygame.sprite.Sprite):
 
         self.shoot_delay = 180 # shot delay inbetween shots
         self.last_shot = pygame.time.get_ticks()
-
+        self.timetrial = timetrial
     def update(self):
         self.speedx = 0
         keystate = pygame.key.get_pressed() # every key that is pushed down
@@ -110,7 +112,8 @@ class Player(pygame.sprite.Sprite):
         if keystate[pygame.K_RIGHT]:
             self.speedx = 8
         if keystate[pygame.K_SPACE]:
-            self.shoot()
+            if(self.timetrial != True):
+                self.shoot()
 
         # moves the player along the x cordinate
         self.rect.x += self.speedx
@@ -153,7 +156,7 @@ class Mob(pygame.sprite.Sprite):
         self.rect.y = random.randrange(-150,-100)
 
         # enemy gets random x and y speed it travels
-        self.speedy = random.randrange(2,15)
+        self.speedy = random.randrange(5,15)
         self.speedx = random.randrange(-3,3)
 
         self.rot = 0 # rotation
@@ -274,10 +277,11 @@ def menu():
     while start != True:
         screen.blit(background,background_rect)
         displayMsg("Asteroid Assault","monospace",38,WHITE,20,100)
-        # displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
+        displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
         displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
         displayMsg("Press C to Change Ship","monospace",25,WHITE,40,HEIGHT/2+25)
         displayMsg("Press M to Toggle Music","monospace",25,WHITE,40,HEIGHT/2+45)
+        displayMsg("  Press H for Manual","monospace",25,WHITE,40,HEIGHT/2+65)
         player_img = pygame.transform.scale(player_img, (70,58))
         player_img.set_colorkey(BLACK)
         screen.blit(player_img,(WIDTH/2-20,HEIGHT/2-120))
@@ -291,7 +295,7 @@ def menu():
                 if event.key == pygame.K_SPACE:
                     start = True
                     # # create and add player to sprite group
-                    player = Player()
+                    player = Player(True)
                     all_sprites.add(player)
                     # loop the background music
                     # pygame.mixer.music.play(loops= -1)
@@ -301,6 +305,9 @@ def menu():
                         colorIndex = 0
                     player_img = pygame.image.load(path.join(img_dir,ship_list[colorIndex])).convert()
                     colorIndex += 1
+                if event.key == pygame.K_h:
+                    os.system('open -e manual.txt')
+
                 if event.key == pygame.K_m:
                     if(musicplaying == False):
                         pygame.mixer.music.set_volume(0.3)
@@ -340,15 +347,12 @@ def main():
                 if event.key == pygame.K_p:
                     if(pause):
                         pause = False
-
                     else:
                         pause = True
+                if event.key == pygame.K_ESCAPE:
+                    if(pause):
+                        pygame.quit()
 
-
-         #key was pressed down
-            #if event.type == pygame.KEYDOWN:
-                #if event.key == pygame.K_SPACE:
-                    #player.shoot()
 
 
         # Update
@@ -409,9 +413,14 @@ def main():
 
         if(pause):
             displayMsg("PAUSED","monospace",50,WHITE,110,HEIGHT/2-10)
+            displayMsg("PRESS ESC TO EXIT GAME","monospace",25,WHITE,30,HEIGHT/2+50)
+
 
         # *after* drawing everything, flip the display
         pygame.display.flip()
+
+
+
 
 # the end screen state of the game : 2
 def endScreen():
@@ -430,6 +439,7 @@ def endScreen():
             writeHighScore(score)
             high_score = score
             pygame.display.flip()
+
         # regular score
         else:
             displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
@@ -448,7 +458,7 @@ def endScreen():
                     quit = True
                     run = False
                 if event.key == pygame.K_SPACE:
-                    player = Player()
+                    player = Player(True)
                     all_sprites.add(player)
                     STATE = 1
                     quit = True
@@ -458,7 +468,6 @@ def endScreen():
 
 
 
-start = False
 high_score = getHighScore() # get the high score
 run = True
 while(run):
@@ -468,13 +477,15 @@ while(run):
         menu()
     # main game state
     elif(STATE == 1):
-        # End Screen
         score = main()
-        # if score > highscore
-        higher = False
-        if score > high_score:
-            higher = True
-        STATE = 2
+        if(score == -1):
+            STATE = 0
+        else:
+            # if score > highscore
+            higher = False
+            if score > high_score:
+                higher = True
+            STATE = 2
     # end game state
     elif(STATE == 2):
         endScreen()

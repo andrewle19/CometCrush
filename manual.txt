@@ -1,0 +1,7 @@
+Controls:
+
+Left-arrow key: move left
+Right-arrow key: move right
+Space_bar key: shoot 
+P key: pause game
+
