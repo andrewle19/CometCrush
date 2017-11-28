@@ -1,7 +1,25 @@
-Controls:
+MainMenu Controls:
+Space_bar key: Starts the Game
+C key: Changes Ship color
+M key: Toggle Music Settings
+D key: change the difficulty of the game
+
+In-Game Controls:
 
 Left-arrow key: move left
 Right-arrow key: move right
-Space_bar key: shoot 
+Space_bar key: shoot
 P key: pause game
 
+
+Pause Controls:
+
+P key: unpause Game
+return key: exit game
+esc key: return to main menu
+
+End-Game Controls:
+
+Space_bar key: restarts the game
+esc key: return to main menu
+return key: exit game

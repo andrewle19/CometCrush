@@ -85,7 +85,7 @@ class Explosion(pygame.sprite.Sprite):
 
 # player ship class
 class Player(pygame.sprite.Sprite):
-    def __init__(self,timetrial):
+    def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
         # sets the player image to specefic size // load image
@@ -101,7 +101,6 @@ class Player(pygame.sprite.Sprite):
 
         self.shoot_delay = 180 # shot delay inbetween shots
         self.last_shot = pygame.time.get_ticks()
-        self.timetrial = timetrial
     def update(self):
         self.speedx = 0
         keystate = pygame.key.get_pressed() # every key that is pushed down
@@ -112,8 +111,7 @@ class Player(pygame.sprite.Sprite):
         if keystate[pygame.K_RIGHT]:
             self.speedx = 8
         if keystate[pygame.K_SPACE]:
-            if(self.timetrial != True):
-                self.shoot()
+            self.shoot()
 
         # moves the player along the x cordinate
         self.rect.x += self.speedx
@@ -137,7 +135,7 @@ class Player(pygame.sprite.Sprite):
 
 # enemy units
 class Mob(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self,baseSpeed,topSpeed):
         pygame.sprite.Sprite.__init__(self)
 
         # load image of asteroid
@@ -156,7 +154,11 @@ class Mob(pygame.sprite.Sprite):
         self.rect.y = random.randrange(-150,-100)
 
         # enemy gets random x and y speed it travels
-        self.speedy = random.randrange(5,15)
+        # self.speedy = random.randrange(3,15)
+        self.baseSpeed = baseSpeed
+        self.topSpeed = topSpeed
+        self.speedy = random.randrange(self.baseSpeed,self.topSpeed)
+        print(self.speedy)
         self.speedx = random.randrange(-3,3)
 
         self.rot = 0 # rotation
@@ -191,7 +193,8 @@ class Mob(pygame.sprite.Sprite):
         if self.rect.top > HEIGHT + 10 or self.rect.left < -20 or self.rect.right > WIDTH + 20:
             self.rect.x = random.randrange(WIDTH - self.rect.width)
             self.rect.y = random.randrange(-100,-30)
-            self.speedy = random.randrange(1, 9)
+            self.speedy = random.randrange(self.baseSpeed,self.topSpeed)
+
 
 
 # shots fire
@@ -258,6 +261,10 @@ for snd in explosion_snd:
 die_snd = pygame.mixer.Sound(path.join(sound_dir,"die.wav"))
 die_snd.set_volume(0.20)
 
+difficultySettings = ['EASY','NORMAL','HARD','INSANE']
+
+difficulty = difficultySettings[1]
+difficultyIndex = 1
 # Sprite Groups
 all_sprites = pygame.sprite.Group()
 mobs = pygame.sprite.Group()
@@ -271,8 +278,10 @@ shots = pygame.sprite.Group()
 # Start menu
 #First game state the Menu: 0
 def menu():
-    global player_img, player, STATE, musicplaying
+    global player_img, player, STATE, musicplaying, difficulty, difficultyIndex
+
     colorIndex = 0
+
     start = False
     while start != True:
         screen.blit(background,background_rect)
@@ -282,6 +291,8 @@ def menu():
         displayMsg("Press C to Change Ship","monospace",25,WHITE,40,HEIGHT/2+25)
         displayMsg("Press M to Toggle Music","monospace",25,WHITE,40,HEIGHT/2+45)
         displayMsg("  Press H for Manual","monospace",25,WHITE,40,HEIGHT/2+65)
+        displayMsg("Difficulty: " + str(difficulty),"monospace",28,WHITE,43,HEIGHT - 28)
+
         player_img = pygame.transform.scale(player_img, (70,58))
         player_img.set_colorkey(BLACK)
         screen.blit(player_img,(WIDTH/2-20,HEIGHT/2-120))
@@ -295,7 +306,7 @@ def menu():
                 if event.key == pygame.K_SPACE:
                     start = True
                     # # create and add player to sprite group
-                    player = Player(True)
+                    player = Player()
                     all_sprites.add(player)
                     # loop the background music
                     # pygame.mixer.music.play(loops= -1)
@@ -307,7 +318,15 @@ def menu():
                     colorIndex += 1
                 if event.key == pygame.K_h:
                     os.system('open -e manual.txt')
+                if event.key == pygame.K_d:
 
+                    difficultyIndex += 1
+                    if(difficultyIndex == 4):
+                        difficultyIndex = 0
+
+                    difficulty = difficultySettings[difficultyIndex]
+
+                    print(difficulty)
                 if event.key == pygame.K_m:
                     if(musicplaying == False):
                         pygame.mixer.music.set_volume(0.3)
@@ -321,10 +340,37 @@ def menu():
 
 # the main game state: 1
 def main():
-    global player, all_sprites
+    global player, all_sprites,difficulty
+
+    # check the difficulty
+    if (difficulty == "EASY"):
+        mobcount = 7
+        scoreModifier = 0.7
+        baseSpeed = 1
+        topSpeed = 12
+        print("EASY difficulty")
+    elif(difficulty == "NORMAL"):
+        mobcount = 10
+        scoreModifier = 1
+        baseSpeed = 3
+        topSpeed = 15
+        print("NORMAL difficulty")
+    elif(difficulty == "HARD"):
+        mobcount = 13
+        scoreModifier = 1.5
+        baseSpeed = 5
+        topSpeed = 17
+        print("HARD difficulty")
+    elif(difficulty == "INSANE"):
+        mobcount = 17
+        scoreModifier = 3
+        baseSpeed = 7
+        topSpeed = 17
+        print("INSANE difficulty")
+
     # spawn range between 0-10
-    for i in range(10):
-        m = Mob()
+    for i in range(mobcount):
+        m = Mob(baseSpeed,topSpeed)
         # add mob to groups
         all_sprites.add(m)
         mobs.add(m)
@@ -343,15 +389,27 @@ def main():
             # check for closing window
             if event.type == pygame.QUIT:
                 running = False
+
             if event.type == pygame.KEYDOWN:
+                # if player wants to pause
                 if event.key == pygame.K_p:
                     if(pause):
                         pause = False
                     else:
                         pause = True
-                if event.key == pygame.K_ESCAPE:
+                # exit the game from pause state
+                if event.key == pygame.K_RETURN:
                     if(pause):
                         pygame.quit()
+                # exit to main menu
+                if event.key == pygame.K_ESCAPE:
+                    if(pause):
+                        # delete the sprites
+                        all_sprites.empty()
+                        mobs.empty()
+                        shots.empty()
+                        score = -1
+                        return score
 
 
 
@@ -365,10 +423,10 @@ def main():
 
         # if a hit lands spawn more mobs
         for hit in hits:
-            m = Mob()
+            m = Mob(baseSpeed,topSpeed)
             all_sprites.add(m)
             mobs.add(m)
-            score += int((50 - hit.radius)/2)
+            score += int((50 - hit.radius)/2 * scoreModifier)
             hitscore += 1
             explosion = Explosion(hit.rect.center)
             all_sprites.add(explosion)
@@ -411,9 +469,11 @@ def main():
 
         all_sprites.draw(screen)
 
+        # when the game is in the pause state show pause options
         if(pause):
             displayMsg("PAUSED","monospace",50,WHITE,110,HEIGHT/2-10)
-            displayMsg("PRESS ESC TO EXIT GAME","monospace",25,WHITE,30,HEIGHT/2+50)
+            displayMsg("PRESS RETURN TO EXIT GAME","monospace",22,WHITE,32,HEIGHT/2+50)
+            displayMsg("PRESS ESC TO RETURN TO MENU","monospace",22,WHITE,25,HEIGHT/2+70)
 
 
         # *after* drawing everything, flip the display
@@ -458,7 +518,7 @@ def endScreen():
                     quit = True
                     run = False
                 if event.key == pygame.K_SPACE:
-                    player = Player(True)
+                    player = Player()
                     all_sprites.add(player)
                     STATE = 1
                     quit = True
@@ -470,6 +530,7 @@ def endScreen():
 
 high_score = getHighScore() # get the high score
 run = True
+
 while(run):
 
     # menu state
@@ -478,6 +539,7 @@ while(run):
     # main game state
     elif(STATE == 1):
         score = main()
+
         if(score == -1):
             STATE = 0
         else:
