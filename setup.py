@@ -2,7 +2,7 @@ from setuptools import setup
 
 APP = ['main.py']
 
-DATA_FILES = [('',['img']),('',['sound']),('high_score.txt')]
+DATA_FILES = [('',['img']),('',['sound']),('high_score.txt'),('manual.txt')]
 OPTIONS = {'iconfile':'app.icns',}
 setup(
 

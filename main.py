@@ -291,7 +291,20 @@ def menu():
         displayMsg("Press C to Change Ship","monospace",25,WHITE,40,HEIGHT/2+25)
         displayMsg("Press M to Toggle Music","monospace",25,WHITE,40,HEIGHT/2+45)
         displayMsg("  Press H for Manual","monospace",25,WHITE,40,HEIGHT/2+65)
-        displayMsg("Difficulty: " + str(difficulty),"monospace",28,WHITE,43,HEIGHT - 28)
+        displayMsg("Difficulty: ","monospace",28,WHITE,43,HEIGHT - 28)
+        if(difficulty == "EASY"):
+            displayMsg(str(difficulty),"monospace",28,GREEN,240,HEIGHT - 28)
+        elif(difficulty == "NORMAL"):
+            displayMsg(str(difficulty),"monospace",28,WHITE,240,HEIGHT - 28)
+        elif(difficulty == "HARD"):
+            displayMsg(str(difficulty),"monospace",28,YELLOW,240,HEIGHT - 28)
+        elif(difficulty == "INSANE"):
+            displayMsg(str(difficulty),"monospace",28,RED,240,HEIGHT - 28)
+
+
+
+
+
 
         player_img = pygame.transform.scale(player_img, (70,58))
         player_img.set_colorkey(BLACK)
@@ -362,7 +375,7 @@ def main():
         topSpeed = 17
         print("HARD difficulty")
     elif(difficulty == "INSANE"):
-        mobcount = 17
+        mobcount = 15
         scoreModifier = 3
         baseSpeed = 7
         topSpeed = 17
@@ -400,7 +413,9 @@ def main():
                 # exit the game from pause state
                 if event.key == pygame.K_RETURN:
                     if(pause):
-                        pygame.quit()
+                        score = -2 # indicate to state machine we want to end
+                        return score
+
                 # exit to main menu
                 if event.key == pygame.K_ESCAPE:
                     if(pause):
@@ -540,8 +555,12 @@ while(run):
     elif(STATE == 1):
         score = main()
 
+        #signal to back to main menu
         if(score == -1):
             STATE = 0
+        # signal to quit from pause
+        elif(score == -2):
+            run = False
         else:
             # if score > highscore
             higher = False
