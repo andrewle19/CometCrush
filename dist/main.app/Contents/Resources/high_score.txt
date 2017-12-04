@@ -1,1 +1,1 @@
-/Users/Andrew/Documents/Python/CometCrush/high_score.txt
+7381

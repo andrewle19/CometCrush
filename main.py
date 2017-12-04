@@ -1,4 +1,4 @@
-#!/usr/bin/env python.
+#!usr/bin/env python
 # Comet Crush
 # music by AphixSky
 # Art by Kenny
@@ -220,7 +220,7 @@ class Shot(pygame.sprite.Sprite):
 
 
 #load all game graphics
-background = pygame.image.load(path.join(img_dir,"space.jpg")).convert()
+background = pygame.image.load(path.join(img_dir,"space3.jpg")).convert()
 background_rect = background.get_rect()
 
 # load in a random ship
@@ -510,7 +510,8 @@ def endScreen():
             displayMsg("New High Score!!!","monospace",25,WHITE,80,30)
             displayMsg("Score:" + str(score),"monospace",25,WHITE,140,HEIGHT/2)
             displayMsg("Press SPACE to Try Again!","monospace",25,WHITE,25,HEIGHT/2+20)
-            displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+40)
+            displayMsg("Press ESC for MainMenu","monospace",25,WHITE,40,HEIGHT/2+40)
+            displayMsg("Press ENTER to quit","monospace",25,WHITE,50,HEIGHT/2+60)
             writeHighScore(score)
             high_score = score
             pygame.display.flip()
