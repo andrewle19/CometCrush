@@ -31,7 +31,7 @@ YELLOW = (255, 255, 0)
 pygame.init()
 pygame.mixer.init() # deals with sound
 screen = pygame.display.set_mode((WIDTH, HEIGHT)) # sets the creen
-pygame.display.set_caption("Shooter")
+pygame.display.set_caption("Asteroid Assault")
 clock = pygame.time.Clock()
 STATE = 0 # state the game is currently at 0 = menu, 1 = playing, 2 = end Screen
 musicplaying = False # variable to check if the music is playing
