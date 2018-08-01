@@ -31,7 +31,7 @@ YELLOW = (255, 255, 0)
 pygame.init()
 pygame.mixer.init() # deals with sound
 screen = pygame.display.set_mode((WIDTH, HEIGHT)) # sets the creen
-pygame.display.set_caption("AsteroidAssault")
+pygame.display.set_caption("CometCrush")
 clock = pygame.time.Clock()
 STATE = 0 # state the game is currently at 0 = menu, 1 = playing, 2 = end Screen
 musicplaying = False # variable to check if the music is playing
@@ -247,9 +247,9 @@ for img in explosion_list:
 # load game sound
 laser_sound = pygame.mixer.Sound(path.join(sound_dir,"Laser.wav"))
 laser_sound.set_volume(0.20)
-pygame.mixer.music.load(path.join(sound_dir,'background.wav'))
+pygame.mixer.music.load(path.join(sound_dir,'background2.wav'))
 pygame.mixer.music.set_volume(0.3)
-
+pygame.mixer.music.play(loops = -1)
 explosion_snd = []
 
 explosion_list = ['explosion.wav','explosion2.wav','explosion3.wav','explosion4.wav']
@@ -285,13 +285,13 @@ def menu():
     start = False
     while start != True:
         screen.blit(background,background_rect)
-        displayMsg("Asteroid Assault","monospace",38,WHITE,20,100)
-        displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,43,HEIGHT/2 - 24)
-        displayMsg("Press SPACE to Play!","monospace",25,WHITE,60,HEIGHT/2)
-        displayMsg("Press C to Change Ship","monospace",25,WHITE,40,HEIGHT/2+25)
-        displayMsg("Press M to Toggle Music","monospace",25,WHITE,40,HEIGHT/2+45)
-        displayMsg("  Press H for Manual","monospace",25,WHITE,40,HEIGHT/2+65)
-        displayMsg("Difficulty: ","monospace",28,WHITE,43,HEIGHT - 28)
+        displayMsg("Comet Crush","monospace",38,WHITE,WIDTH/4+10,100)
+        displayMsg("Current High Score:" + str(high_score),"monospace",25,WHITE,WIDTH/4,HEIGHT/2 - 24)
+        displayMsg("Press SPACE to Play!","monospace",25,WHITE,WIDTH/4+5,HEIGHT/2)
+        displayMsg("Press C to Change Ship","monospace",25,WHITE,WIDTH/4,HEIGHT/2+25)
+        displayMsg("Press M to Toggle Music","monospace",25,WHITE,WIDTH/4,HEIGHT/2+45)
+        displayMsg("  Press H for Manual","monospace",25,WHITE,WIDTH/4,HEIGHT/2+65)
+        displayMsg("Difficulty: ","monospace",28,WHITE,WIDTH/4-10,HEIGHT - 28)
         if(difficulty == "EASY"):
             displayMsg(str(difficulty),"monospace",28,GREEN,240,HEIGHT - 28)
         elif(difficulty == "NORMAL"):
@@ -341,13 +341,12 @@ def menu():
 
                     print(difficulty)
                 if event.key == pygame.K_m:
-                    if(musicplaying == False):
-                        pygame.mixer.music.set_volume(0.3)
-                        pygame.mixer.music.play(loops = -1)
-                        musicplaying = True
-                    else:
+                    if(musicplaying == True):
                         pygame.mixer.music.set_volume(0)
                         musicplaying = False
+                    else:
+                        pygame.mixer.music.set_volume(0.3)
+                        musicplaying = True
 
 
 
@@ -476,9 +475,9 @@ def main():
 
         displayMsg("Score:" + str(score),"monospace",20,WHITE,0,0) # display score board
         if score > high_score:
-            displayMsg("HighScore:" + str(score),"monospace",20,WHITE,220,0) # display high score
+            displayMsg("HighScore:" + str(score),"monospace",20,WHITE,250,0) # display high score
         else:
-            displayMsg("HighScore:" + str(high_score),"monospace",20,WHITE,220,0) # display high score
+            displayMsg("HighScore:" + str(high_score),"monospace",20,WHITE,250,0) # display high score
 
 
 
